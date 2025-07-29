@@ -38,6 +38,26 @@ export class MyDurableObject extends DurableObject<Env> {
       .one() as { greeting: string };
     return result.greeting;
   }
+
+  /**
+   * Handle user state based greeting with conditional logic similar to Vue template
+   * 
+   * @param isLoaded - Whether the application has finished loading
+   * @param isSignedIn - Whether the user is signed in
+   * @param fullName - The user's full name (optional)
+   * @returns The appropriate greeting based on state
+   */
+  async getGreeting(isLoaded: boolean, isSignedIn: boolean, fullName?: string): Promise<string> {
+    if (!isLoaded) {
+      return "Loading...";
+    }
+
+    if (isSignedIn) {
+      return `Hello ${fullName || 'User'}!`;
+    }
+
+    return "Not signed in";
+  }
 }
 
 export default {
@@ -50,21 +70,29 @@ export default {
    * @returns The response to be sent back to the client
    */
   async fetch(request, env, ctx): Promise<Response> {
+    // Parse URL and query parameters
+    const url = new URL(request.url);
+    const searchParams = url.searchParams;
+
+    // Extract state parameters (similar to Vue template logic)
+    const isLoaded = searchParams.get('loaded') !== 'false'; // Default to true unless explicitly false
+    const isSignedIn = searchParams.get('signedIn') === 'true';
+    const fullName = searchParams.get('fullName') || undefined;
+
     // Create a `DurableObjectId` for an instance of the `MyDurableObject`
     // class. The name of class is used to identify the Durable Object.
     // Requests from all Workers to the instance named
     // will go to a single globally unique Durable Object instance.
     const id: DurableObjectId = env.MY_DURABLE_OBJECT.idFromName(
-      new URL(request.url).pathname,
+      url.pathname,
     );
 
     // Create a stub to open a communication channel with the Durable
     // Object instance.
     const stub = env.MY_DURABLE_OBJECT.get(id);
 
-    // Call the `sayHello()` RPC method on the stub to invoke the method on
-    // the remote Durable Object instance
-    const greeting = await stub.sayHello();
+    // Use conditional logic based on user state (similar to Vue template)
+    const greeting = await stub.getGreeting(isLoaded, isSignedIn, fullName);
 
     return new Response(greeting);
   },

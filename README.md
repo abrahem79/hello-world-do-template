@@ -38,6 +38,30 @@ Open [http://localhost:8787](http://localhost:8787) with your browser to see the
 
 You can start editing the project by modifying `src/index.ts`.
 
+## Features
+
+The application now supports conditional responses based on user state, similar to Vue.js template logic:
+
+- **Loading state**: `/?loaded=false` - Returns "Loading..."
+- **Signed in state**: `/?signedIn=true&fullName=YourName` - Returns "Hello YourName!"
+- **Not signed in state**: `/` (default) - Returns "Not signed in"
+
+### Examples
+
+```bash
+# Default state (not signed in)
+curl http://localhost:8787/
+
+# Loading state
+curl http://localhost:8787/?loaded=false
+
+# Signed in with name
+curl "http://localhost:8787/?signedIn=true&fullName=John%20Doe"
+
+# Signed in without name (defaults to "User")
+curl http://localhost:8787/?signedIn=true
+```
+
 ## Deploying To Production
 
 | Command          | Action                                |
